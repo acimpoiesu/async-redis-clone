@@ -128,7 +128,7 @@ OK
 
 ## Roadmap
 
--   [ ] Establish multiplexed socket architecture
+-   [x] Establish multiplexed socket architecture
     
 -   [ ] Construct RESP binary deserializer
     
