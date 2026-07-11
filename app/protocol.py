@@ -50,6 +50,9 @@ def parse_response(data: bytes) -> tuple[list[str], int]:
         if len(data) < str_end + 2:
             return [], 0
         
+        if data[str_end:str_end+2] != CRLF:
+            raise ValueError("Bulk string not terminated by CRLF")
+        
         # extracts, decodes, and then appends the actual payload as a string
         payload = data[str_start:str_end].decode("utf-8")
         elements.append(payload)
