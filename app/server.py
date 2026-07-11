@@ -1,4 +1,5 @@
 import asyncio
+from app.protocol import parse_response
 
 MAX_CHUNK_SIZE = 1024 # 1 KB read buffer
 CRLF = b"\r\n"
@@ -27,6 +28,20 @@ async def connection_handler(reader: asyncio.StreamReader, writer: asyncio.Strea
                 break
             # log raw bytes
             print(f"{addr} Raw bytes received: {data!r}")
+            try:
+                command_args, _ = parse_response(data)
+
+                if command_args:
+                    print(f"Parsed command: {command_args} from {addr}")
+                else:
+                    print(f"waiting for more data from {addr}...")
+                    continue
+            except ValueError as e:
+                print(f"Protocol error: {e}")
+                writer.write(b"-ERR Protocol error\r\n")
+                await writer.drain()
+                continue
+            
             writer.write(b"+PONG\r\n")
             await writer.drain()
 
