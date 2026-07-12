@@ -60,3 +60,20 @@ def parse_response(data: bytes) -> tuple[list[str], int]:
         pointer = str_end + 2
 
     return elements, pointer
+
+def serialize_simple_string(message: str) -> bytes:
+    """Status message get converted into a RESP simple string"""
+    return f"+{message}\r\n".encode('utf-8')
+
+def serialize_bulk_string(data: str | None) -> bytes: 
+    """String payload goes into a RESP bulk string. If None, return a RESP null String."""
+    if data is None:
+        return b"$-1\r\n"
+    
+    # for unicode to work we need byte length
+    byte_data = data.encode("utf-8")
+    return b"$" + str(len(byte_data)).encode('utf-8') + CRLF + byte_data + CRLF
+
+def serialize_error(message: str) -> bytes:
+    """Formats error message into RESP error"""
+    return f"-ERR {message}\r\n".encode('utf-8')
