@@ -130,9 +130,9 @@ OK
 
 -   [x] Establish multiplexed socket architecture
     
--   [ ] Construct RESP binary deserializer
+-   [x] Construct RESP binary deserializer
     
--   [ ] Implement base mutating commands (`PING`, `GET`, `SET`)
+-   [x] Implement base mutating commands (`PING`, `GET`, `SET`)
     
 -   [ ] Background min-heap (O(logn)) to track and evict keys based on integer TTLs
     
