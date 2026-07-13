@@ -1,8 +1,50 @@
 import asyncio
-from app.protocol import parse_response
+from app.protocol import (
+    parse_response,
+    serialize_simple_string,
+    serialize_bulk_string,
+    serialize_error
+)
+from app.store import db # global datastore
 
 MAX_CHUNK_SIZE = 1024 # 1 KB read buffer
 CRLF = b"\r\n"
+
+def handle_command(command_args: list[str]) -> bytes:
+    """Routes a RESP command to the corresponding datastore operation and returns the serialized reponse.
+
+    Args:
+        command_args (list[str]): input RESP commands
+
+    Returns:
+        bytes: serialized RESP response
+    """
+
+    if not command_args:
+        return serialize_error("Empty command")
+    
+    cmd = command_args[0].upper() # redis commands are case insensitive
+
+    if cmd == "PING":
+        return serialize_simple_string("PONG")
+    
+    elif cmd == "COMMAND":
+        return b"*0\r\n"
+    
+    elif cmd == "SET":
+        if len(command_args) < 3:
+            return(serialize_error("ERR wrong number of args for set command"))
+        key,value = command_args[1], command_args[2]
+        db.set(key,value)
+        return(serialize_simple_string("OK"))
+    
+    elif cmd == "GET":
+        if len(command_args) != 2:
+            return(serialize_error("ERR wrong number of args for get command"))
+        key = command_args[1]
+        val = db.get(key)
+        return serialize_bulk_string(val)
+    return serialize_error(f"ERR unknown command {cmd}")
 
 async def connection_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
     """Manages lifecycle of a TCP connection
