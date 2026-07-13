@@ -75,17 +75,18 @@ async def connection_handler(reader: asyncio.StreamReader, writer: asyncio.Strea
 
                 if command_args:
                     print(f"Parsed command: {command_args} from {addr}")
+                    response_bytes = handle_command(command_args)
+                    writer.write(response_bytes)
+                    await writer.drain()
                 else:
                     print(f"waiting for more data from {addr}...")
                     continue
+
             except ValueError as e:
                 print(f"Protocol error: {e}")
                 writer.write(b"-ERR Protocol error\r\n")
                 await writer.drain()
                 continue
-            
-            writer.write(b"+PONG\r\n")
-            await writer.drain()
 
     except ConnectionResetError:
         pass # client drops connection
