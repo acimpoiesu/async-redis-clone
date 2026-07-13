@@ -44,6 +44,26 @@ class TestProtocolParser(unittest.TestCase):
         with self.assertRaises(ValueError) as error_catch:
             parse_response(bad_terminator_data)
         self.assertIn("not terminated by CRLF", str(error_catch.exception))
+
+    def test_serialize_simple_string(self):
+        """Checks if status messages cleanly format into RESP simple strings"""
+        from app.protocol import serialize_simple_string
+        self.assertEqual(serialize_simple_string("OK"), b"+OK\r\n")
     
+    def test_serialize_bulk_string_valid(self):
+        """Checks if standard strings format into RESP bulk strings with byte length"""
+        from app.protocol import serialize_bulk_string
+        self.assertEqual(serialize_bulk_string("scalable"), b"$8\r\nscalable\r\n")
+
+    def test_serialize_bulk_string_null(self):
+        """Checks if None correctly goes into RESP Null Bulk String"""
+        from app.protocol import serialize_bulk_string
+        self.assertEqual(serialize_bulk_string(None), b"$-1\r\n")
+
+    def test_serialize_error(self):
+        """Verifies error text properly goes into RESP error payload"""
+        from app.protocol import serialize_error
+        self.assertEqual(serialize_error("Unknown command"), b"-ERR Unknown command\r\n")
+
 if __name__ == "__main__":
     unittest.main()
