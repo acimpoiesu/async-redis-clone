@@ -1,4 +1,5 @@
 import unittest
+import time
 from app.store import DataStore
 
 class TestDataStore(unittest.TestCase):
@@ -22,6 +23,30 @@ class TestDataStore(unittest.TestCase):
         self.db.set("name", "Alex")
         self.assertTrue(self.db.exists("name"))
         self.assertFalse(self.db.exists("Jimmy"))
+
+    def test_passive_expiration_on_get(self):
+        """Checks that get returns None and deletes key is TTL passed"""
+        self.db.set("temp_key", "10", px=10)
+        time.sleep(0.02)
+
+        self.assertIsNone(self.db.get("temp_key"))
+        self.assertNotIn("temp_key", self.db._store)
+
+    def test_passive_expiration_on_exists(self):
+        """Checks that exists() triggers eviction of stale keys"""
+        self.db.set("temp_key", "10", px=10)
+        time.sleep(0.02)
+
+        self.assertFalse(self.db.exists("temp_key"))
+
+    def test_overwrite_clear_ttl(self):
+        """Checks if overwriting a key without a px clears TTL"""
+        self.db.set("temp_key", "10", px=10)
+        self.db.set("temp_key", "troll")
+
+        time.sleep(0.02)
+
+        self.assertEqual(self.db.get("sticky_key"), "troll")
 
 if __name__ == "__main__":
     unittest.main()
