@@ -49,7 +49,30 @@ class DataStore:
     
     def exists(self, key:str) -> bool:
         """Checks if key exists in storage"""
-        return key in self._store
+        return self.get(key) is not None
+    
+    async def eviction_loop(self) -> None:
+        """Daemon task to remove expired keys. Runs alongside TCP server"""
+        while True:
+            if not self._expiry_heap:
+                await asyncio.sleep(EVICTION_TICK_RATE)
+                continue
+
+            current_ms = time.time() * MS_PER_SEC
+            smallest_expiry, key = self._expiry_heap[0]
+
+            if current_ms > smallest_expiry:
+                heapq.heappop(self._expiry_heap)
+
+                if key in self._store:
+                    _, actual_expiry = self._store[key]
+                    if actual_expiry == smallest_expiry:
+                        del self._store[key]
+                        print(f"Eviction Loop: Purged expired key '{key}'")
+
+            else:
+                sleep_time = (smallest_expiry - current_ms) / float(MS_PER_SEC)
+                await asyncio.sleep(min(sleep_time, EVICTION_TICK_RATE))
     
 # creating a global singleton of the store
 # since asyncio is single threaded the dict
