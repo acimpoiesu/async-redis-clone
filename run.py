@@ -1,9 +1,10 @@
 import asyncio
+from app.server import start_server 
+from app.store import db
 
-from app.server import start_server
-
+async def main():
+    asyncio.create_task(db.eviction_loop())
+    await start_server()
+    
 if __name__ == "__main__":
-    try:
-        asyncio.run(start_server())
-    except KeyboardInterrupt:
-        print("\nEngine is shutting down.")
+    asyncio.run(main())
