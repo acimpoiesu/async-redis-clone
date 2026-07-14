@@ -46,7 +46,7 @@ class TestDataStore(unittest.TestCase):
 
         time.sleep(0.02)
 
-        self.assertEqual(self.db.get("sticky_key"), "troll")
+        self.assertEqual(self.db.get("temp_key"), "troll")
 
 if __name__ == "__main__":
     unittest.main()
