@@ -35,7 +35,14 @@ def handle_command(command_args: list[str]) -> bytes:
         if len(command_args) < 3:
             return(serialize_error("ERR wrong number of args for set command"))
         key,value = command_args[1], command_args[2]
-        db.set(key,value)
+        px_ms = None
+        if len(command_args) >= 5 and command_args[3].upper() == "PX":
+            try:
+                px_ms = int(command_args[4])
+            except ValueError:
+                return serialize_error("ERR value is not an int or out of range")
+            
+        db.set(key,value, px_ms)
         return(serialize_simple_string("OK"))
     
     elif cmd == "GET":
