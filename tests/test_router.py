@@ -1,4 +1,5 @@
 import unittest
+import time
 from app.server import handle_command
 from app.store import db
 
@@ -45,6 +46,20 @@ class TestCommandRouter(unittest.TestCase):
     def test_unknown_command(self):
         """Verifies unknown command returns a standard error"""
         self.assertEqual(handle_command(["SUPER_SET"]), b"-ERR ERR unknown command SUPER_SET\r\n")
+
+    def test_set_with_px(self):
+        """Checks if SET parses PX and stores TTL"""
+        response = handle_command(["SET", "temp", "data", "PX", "50"])
+        self.assertEqual(response, b"+OK\r\n")
+
+        self.assertEqual(db.get("temp"), "data")
+        time.sleep(0.06)
+        self.assertEqual(handle_command(["GET", "temp"]), b"$-1\r\n")
+
+    def test_set_with_incorrect_px(self):
+        """Verifies SET rejects malfored PX"""
+        response = handle_command(["SET", "temp", "data", "PX", "not_an_int"])
+        self.assertEqual(response, b"-ERR ERR value is not an int or out of range\r\n")
 
 if __name__ == "__main__":
     unittest.main()
